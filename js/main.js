@@ -44,8 +44,10 @@ function setup() {
   // Apply default preset (first preset from PRESETS array)
   handlePreset(PRESETS[0]);
 
-  // Load default video (preset a.mp4)
-  loadPresetVideo("./videos/a_x264.mp4");
+  // Load default video (preset a.mp4) with a small delay to ensure engine is ready
+  setTimeout(() => {
+    loadPresetVideo("./videos/a_x264.mp4");
+  }, 100);
 
   // Initial canvas size
   const dims = ui.getGridDimensions();
@@ -89,8 +91,14 @@ function handleVideoPresetSelect(event) {
 function loadPresetVideo(videoPath) {
   console.log("Loading preset video:", videoPath);
   fetch(videoPath)
-    .then((response) => response.blob())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.blob();
+    })
     .then((blob) => {
+      console.log("Video blob loaded successfully, size:", blob.size);
       const file = new File([blob], videoPath.split("/").pop(), {
         type: blob.type,
       });
