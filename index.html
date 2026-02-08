@@ -137,6 +137,13 @@
             background: #00ccff;
             color: #000;
         }
+        .slider-value {
+            font-size: 11px;
+            color: #00ff00;
+            font-weight: 600;
+            min-width: 35px;
+            text-align: center;
+        }
         .grid-options {
             display: flex;
             gap: 12px;
@@ -193,9 +200,13 @@
                     <label>or use Preset:</label>
                     <select id="videoPresetSelect">
                         <option value="">-- Select a preset video --</option>
-                        <option value="./videos/a.mp4">Preset: a.mp4</option>
-                        <option value="./videos/b.mp4">Preset: b.mp4</option>
-                        <option value="./videos/c.mp4">Preset: c.mp4</option>
+                        <option value="./videos/a_x264.mp4">Preset: a.mp4</option>
+                        <option value="./videos/b_x264.mp4">Preset: b.mp4</option>
+                        <option value="./videos/c_x264.mp4">Preset: c.mp4</option>
+                        <option value="./videos/d_x264.mp4">Preset: d.mp4</option>
+                        <option value="./videos/e_x264.mp4">Preset: e.mp4</option>
+                        <option value="./videos/f_x264.mp4">Preset: f.mp4</option>
+                        <option value="./videos/g_x264.mp4">Preset: g.mp4</option>
                     </select>
                 </div>
             </div>
@@ -246,10 +257,12 @@
                 <div class="control-group full">
                     <label>LED Pitch:</label>
                     <input type="range" id="pitchSlider" min="0.02" max="0.9" step="0.01" value="0.5">
+                    <div class="slider-value" id="pitchValue">0.50</div>
                 </div>
                 <div class="control-group full">
                     <label>Bloom:</label>
                     <input type="range" id="bloomSlider" min="0" max="1" step="0.05" value="0.5">
+                    <div class="slider-value" id="bloomValue">0.50</div>
                 </div>
             </div>
         </div>

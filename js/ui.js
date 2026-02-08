@@ -3,8 +3,9 @@
  */
 
 // Define all presets with their configuration (cols, rows, pitch, bloom)
-const PRESETS = [
-  { name: "P3 128x128", cols: 128, rows: 128, pitch: 0.18, bloom: 0.5 },
+export const PRESETS = [
+  { name: "64x32", cols: 64, rows: 32, pitch: 0.61, bloom: 0.4 },
+  { name: "128x128", cols: 128, rows: 128, pitch: 0.65, bloom: 0.5 },
   { name: "P6 256x256", cols: 256, rows: 256, pitch: 0.18, bloom: 0.5 },
   { name: "Tall 128x256", cols: 128, rows: 256, pitch: 0.18, bloom: 0.5 },
   { name: "Wide 256x128", cols: 256, rows: 128, pitch: 0.18, bloom: 0.5 },
@@ -61,6 +62,24 @@ export class UIManager {
     this.fullscreenBtn.mousePressed(onFullscreen);
   }
 
+  setupSliderValueDisplays() {
+    const updatePitchDisplay = () => {
+      const value = this.getPitch();
+      document.querySelector("#pitchValue").textContent = value.toFixed(2);
+    };
+    const updateBloomDisplay = () => {
+      const value = this.getBloom();
+      document.querySelector("#bloomValue").textContent = value.toFixed(2);
+    };
+
+    this.pitchSlider.elt.addEventListener("input", updatePitchDisplay);
+    this.bloomSlider.elt.addEventListener("input", updateBloomDisplay);
+
+    // Initial display
+    updatePitchDisplay();
+    updateBloomDisplay();
+  }
+
   getGridDimensions() {
     return {
       cols: parseFloat(this.ledColsSelect.elt.value || 256),
@@ -79,6 +98,7 @@ export class UIManager {
 
   setPitch(value) {
     this.pitchSlider.elt.value = value;
+    this.pitchSlider.elt.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   getBloom() {
@@ -87,6 +107,7 @@ export class UIManager {
 
   setBloom(value) {
     this.bloomSlider.elt.value = value;
+    this.bloomSlider.elt.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   setTimelineMax(duration) {

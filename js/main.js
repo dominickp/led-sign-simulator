@@ -3,7 +3,7 @@
  */
 
 import { vertexShader, fragmentShader } from "./shaders.js";
-import { UIManager } from "./ui.js";
+import { UIManager, PRESETS } from "./ui.js";
 import { RenderEngine } from "./renderEngine.js";
 import { CanvasManager } from "./canvas.js";
 
@@ -37,6 +37,15 @@ function setup() {
 
   // Initialize canvas manager for fullscreen handling
   CanvasManager.initialize();
+
+  // Setup slider value displays
+  ui.setupSliderValueDisplays();
+
+  // Apply default preset (first preset from PRESETS array)
+  handlePreset(PRESETS[0]);
+
+  // Load default video (preset a.mp4)
+  loadPresetVideo("./videos/a_x264.mp4");
 
   // Initial canvas size
   const dims = ui.getGridDimensions();
@@ -75,6 +84,21 @@ function handleVideoPresetSelect(event) {
       })
       .catch((error) => console.error("Error loading preset video:", error));
   }
+}
+
+function loadPresetVideo(videoPath) {
+  console.log("Loading preset video:", videoPath);
+  fetch(videoPath)
+    .then((response) => response.blob())
+    .then((blob) => {
+      const file = new File([blob], videoPath.split("/").pop(), {
+        type: blob.type,
+      });
+      engine.loadVideo(file, () => {
+        console.log("Preset video loaded successfully");
+      });
+    })
+    .catch((error) => console.error("Error loading preset video:", error));
 }
 
 function handlePreset(preset) {
