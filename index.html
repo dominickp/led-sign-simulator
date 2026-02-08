@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <style>
+        body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 2px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .controls { margin: 20px; padding: 20px; background: #222; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
+        label { font-size: 12px; color: #aaa; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <h2>LED Wall Simulator</h2>
+    <div class="controls">
+        <div>
+            <label>Load Video:</label>
+            <input type="file" id="videoInput" accept="video/*">
+        </div>
+        <button id="playBtn">Play/Pause</button>
+        <div>
+            <label>LED Pitch:</label>
+            <input type="range" id="pitchSlider" min="0.02" max="0.9" step="0.01" value="0.18">
+        </div>
+        <div>
+            <label>LED Count:</label>
+            <select id="ledCountSelect">
+                <option value="64">64</option>
+                <option value="128">128</option>
+                <option value="256" selected>256</option>
+                <option value="512">512</option>
+            </select>
+        </div>
+        <div>
+            <label>Presets:</label>
+            <button id="presetP3">P3 128x128</button>
+            <button id="presetP6">P6 256x256</button>
+        </div>
+        <div>
+            <label>Timeline:</label>
+            <input type="range" id="timeline" min="0" max="1" step="0.01" value="0">
+            <div id="timeDisplay" style="font-size:11px;color:#ccc;">0:00 / 0:00</div>
+        </div>
+        <div>
+            <button id="fullscreenBtn">Fullscreen</button>
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+    <script src="sketch.js"></script>
+</body>
+</html>
