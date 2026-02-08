@@ -3,7 +3,8 @@ let img;
 let video;
 let pitchSlider;
 let isVideoLoaded = false;
-let ledCountSelect;
+let ledColsSelect;
+let ledRowsSelect;
 let timeline;
 let timeDisplay;
 let fullscreenBtn;
@@ -15,7 +16,8 @@ const vs = `
     attribute vec2 aTexCoord;
     varying vec2 vTexCoord;
     void main() {
-        vTexCoord = aTexCoord;
+        // flip Y to correct upside-down video in WEBGL mode
+        vTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
         vec4 positionVec4 = vec4(aPosition, 1.0);
         positionVec4.xy = positionVec4.xy * 2.0 - 1.0;
         gl_Position = positionVec4;
@@ -27,22 +29,26 @@ const fs = `
     varying vec2 vTexCoord;
     uniform sampler2D tex0;
     uniform vec2 resolution;
-    uniform float ledCount; // e.g. 256.0
+    uniform vec2 ledCount; // cols, rows
     uniform float pitch;    // size of the "dot"
 
     void main() {
-        // 1. Create the grid coordinates
+        // 1. Create the grid coordinates (support non-square grids)
         vec2 grid = fract(vTexCoord * ledCount);
         vec2 cell = floor(vTexCoord * ledCount) / ledCount;
 
-        // 2. Sample the video at the center of each "LED"
-        vec4 col = texture2D(tex0, cell + (0.5/ledCount));
+        // 2. Sample the video at the center of each "LED" (use vec2 offset)
+        vec2 offset = vec2(0.5) / ledCount;
+        vec4 col = texture2D(tex0, cell + offset);
 
-        // 3. Create the circular LED shape
-        float dist = distance(grid, vec2(0.5));
-        float radius = pitch;
+        // 3. Create the square LED shape with rounded corners
+        vec2 d = abs(grid - 0.5);
+        float cornerRadius = pitch * 0.5;
         float softness = 0.03;
-        float mask = 1.0 - smoothstep(radius - softness, radius + softness, dist);
+        
+        // Distance to the nearest edge of the square, accounting for rounded corners
+        float dist = length(max(d - vec2(pitch * 0.5 - cornerRadius), 0.0)) - cornerRadius;
+        float mask = 1.0 - smoothstep(-softness, softness, dist);
 
         gl_FragColor = col * mask;
     }
@@ -56,18 +62,73 @@ function setup() {
 
   // UI Elements
   pitchSlider = select("#pitchSlider");
-  ledCountSelect = select("#ledCountSelect");
+  ledColsSelect = select("#ledColsSelect");
+  ledRowsSelect = select("#ledRowsSelect");
   timeline = select("#timeline");
   timeDisplay = select("#timeDisplay");
-  fullscreenBtn = select('#fullscreenBtn');
+  fullscreenBtn = select("#fullscreenBtn");
 
   // File Handling
   select("#videoInput").elt.onchange = handleFile;
   select("#playBtn").mousePressed(toggleVideo);
-  select('#presetP3').mousePressed(()=>{ ledCountSelect.elt.value = '128'; pitchSlider.elt.value = 0.18; });
-  select('#presetP6').mousePressed(()=>{ ledCountSelect.elt.value = '256'; pitchSlider.elt.value = 0.18; });
+
+  // Preset handlers
+  select("#presetP3").mousePressed(() => {
+    ledColsSelect.elt.value = "128";
+    ledRowsSelect.elt.value = "128";
+    pitchSlider.elt.value = 0.18;
+    updateCanvasSize();
+  });
+  select("#presetP6").mousePressed(() => {
+    ledColsSelect.elt.value = "256";
+    ledRowsSelect.elt.value = "256";
+    pitchSlider.elt.value = 0.18;
+    updateCanvasSize();
+  });
+  select("#presetTall").mousePressed(() => {
+    ledColsSelect.elt.value = "128";
+    ledRowsSelect.elt.value = "256";
+    pitchSlider.elt.value = 0.18;
+    updateCanvasSize();
+  });
+  select("#presetWide").mousePressed(() => {
+    ledColsSelect.elt.value = "256";
+    ledRowsSelect.elt.value = "128";
+    pitchSlider.elt.value = 0.18;
+    updateCanvasSize();
+  });
+
   timeline.input(handleTimelineInput);
   fullscreenBtn.mousePressed(toggleFullscreen);
+
+  // Canvas resize listeners for aspect ratio changes
+  ledColsSelect.input(updateCanvasSize);
+  ledRowsSelect.input(updateCanvasSize);
+
+  // Initial canvas size
+  updateCanvasSize();
+}
+
+function updateCanvasSize() {
+  const cols = parseFloat(ledColsSelect.elt.value || 256);
+  const rows = parseFloat(ledRowsSelect.elt.value || 256);
+  const aspect = cols / rows;
+  const baseSize = 600;
+
+  let newW = baseSize;
+  let newH = baseSize;
+
+  if (aspect > 1) {
+    // wider than tall
+    newW = baseSize;
+    newH = Math.round(baseSize / aspect);
+  } else {
+    // taller than wide
+    newW = Math.round(baseSize * aspect);
+    newH = baseSize;
+  }
+
+  resizeCanvas(newW, newH);
 }
 
 function handleFile(event) {
@@ -100,7 +161,7 @@ function handleTimelineInput() {
 }
 
 function toggleFullscreen() {
-  const el = document.querySelector('#canvas-container');
+  const el = document.querySelector("#canvas-container");
   if (!document.fullscreenElement) el.requestFullscreen?.();
   else document.exitFullscreen?.();
 }
@@ -114,8 +175,9 @@ function draw() {
     // Pass variables to the shader
     ledShader.setUniform("tex0", video);
     ledShader.setUniform("resolution", [width, height]);
-    const ledCount = parseFloat(ledCountSelect.elt.value || 256);
-    ledShader.setUniform("ledCount", ledCount);
+    const cols = parseFloat(ledColsSelect.elt.value || 256);
+    const rows = parseFloat(ledRowsSelect.elt.value || 256);
+    ledShader.setUniform("ledCount", [cols, rows]);
     ledShader.setUniform("pitch", parseFloat(pitchSlider.elt.value));
 
     rect(0, 0, width, height);
@@ -124,14 +186,20 @@ function draw() {
     if (video.elt.duration && !isNaN(video.elt.duration)) {
       timeline.elt.max = video.elt.duration;
       timeline.elt.value = video.elt.currentTime;
-      timeDisplay.html(formatTime(video.elt.currentTime) + ' / ' + formatTime(video.elt.duration));
+      timeDisplay.html(
+        formatTime(video.elt.currentTime) +
+          " / " +
+          formatTime(video.elt.duration),
+      );
     }
   }
 }
 
-function formatTime(seconds){
-  if (!isFinite(seconds)) return '0:00';
-  const s = Math.floor(seconds%60).toString().padStart(2,'0');
-  const m = Math.floor(seconds/60);
-  return m+':'+s;
+function formatTime(seconds) {
+  if (!isFinite(seconds)) return "0:00";
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor(seconds / 60);
+  return m + ":" + s;
 }
