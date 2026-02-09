@@ -10,6 +10,9 @@ export const PRESETS = [
   { name: "128x128", cols: 128, rows: 128, pitch: 0.65, bloom: 0.5 },
 ];
 
+// Allowed grid sizes (indexes on sliders map to these values)
+export const GRID_POWERS = [8, 16, 32, 64, 96, 128, 192, 256];
+
 export class UIManager {
   constructor() {
     this.pitchSlider = select("#pitchSlider");
@@ -49,8 +52,31 @@ export class UIManager {
   }
 
   setupGridListeners(onGridChange) {
-    this.ledColsSelect.input(onGridChange);
-    this.ledRowsSelect.input(onGridChange);
+    const updateColsDisplay = () => {
+      const idx = parseInt(this.ledColsSelect.elt.value, 10);
+      const val = GRID_POWERS[idx] || GRID_POWERS[4];
+      const el = document.querySelector("#ledColsValue");
+      if (el) el.textContent = String(val);
+    };
+    const updateRowsDisplay = () => {
+      const idx = parseInt(this.ledRowsSelect.elt.value, 10);
+      const val = GRID_POWERS[idx] || GRID_POWERS[4];
+      const el = document.querySelector("#ledRowsValue");
+      if (el) el.textContent = String(val);
+    };
+
+    this.ledColsSelect.input(() => {
+      updateColsDisplay();
+      onGridChange();
+    });
+    this.ledRowsSelect.input(() => {
+      updateRowsDisplay();
+      onGridChange();
+    });
+
+    // initialize displays
+    updateColsDisplay();
+    updateRowsDisplay();
   }
 
   setupTimelineListener(onTimelineChange) {
@@ -80,15 +106,22 @@ export class UIManager {
   }
 
   getGridDimensions() {
+    const colsIdx = parseInt(this.ledColsSelect.elt.value, 10);
+    const rowsIdx = parseInt(this.ledRowsSelect.elt.value, 10);
     return {
-      cols: parseFloat(this.ledColsSelect.elt.value || 256),
-      rows: parseFloat(this.ledRowsSelect.elt.value || 256),
+      cols: GRID_POWERS[colsIdx] || GRID_POWERS[4],
+      rows: GRID_POWERS[rowsIdx] || GRID_POWERS[4],
     };
   }
 
   setGridDimensions(cols, rows) {
-    this.ledColsSelect.elt.value = String(cols);
-    this.ledRowsSelect.elt.value = String(rows);
+    const colsIdx = GRID_POWERS.indexOf(Number(cols));
+    const rowsIdx = GRID_POWERS.indexOf(Number(rows));
+    if (colsIdx >= 0) this.ledColsSelect.elt.value = String(colsIdx);
+    if (rowsIdx >= 0) this.ledRowsSelect.elt.value = String(rowsIdx);
+    // trigger input so displays and listeners update
+    this.ledColsSelect.elt.dispatchEvent(new Event("input", { bubbles: true }));
+    this.ledRowsSelect.elt.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   getPitch() {

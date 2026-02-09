@@ -1,209 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LED Wall Simulator - Visualize how videos look on LED matrix displays with configurable grid sizes, pixel pitch, and bloom effects.">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:title" content="LED Wall Simulator">
+    <meta property="og:description" content="Visualize video content on simulated LED matrix displays with real-time rendering and customizable parameters.">
+    <meta property="og:type" content="website">
+    <meta name="color-scheme" content="dark">
+    <title>LED Wall Simulator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            background: #0a0a0a; 
-            color: white; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-        }
-        h2 { margin: 0 0 20px 0; font-size: 24px; color: #00ff00; }
-        .canvas-wrapper { 
-            margin-bottom: 30px;
-        }
-        canvas { 
-            border: 2px solid #333; 
-            box-shadow: 0 0 20px rgba(0,255,0,0.1);
-            display: block;
-        }
-        .controls-container {
-            width: 100%;
-            max-width: 900px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        .control-section {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #333;
-        }
-        .control-section:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-        .section-title {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-        .control-row {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .control-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .control-group.full {
-            flex: 1;
-            min-width: 200px;
-        }
-        label { 
-            font-size: 11px; 
-            color: #999; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        input[type="file"],
-        input[type="range"],
-        select,
-        button {
-            padding: 8px 12px;
-            background: #282828;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        input[type="range"] {
-            flex: 1;
-            min-width: 100px;
-            cursor: pointer;
-        }
-        select {
-            min-width: 80px;
-        }
-        button {
-            white-space: nowrap;
-            color: #00ff00;
-            font-weight: 600;
-            border-color: #00ff00;
-        }
-        button:hover {
-            background: #00ff00;
-            color: #000;
-            box-shadow: 0 0 10px rgba(0,255,0,0.3);
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        #playBtn {
-            min-width: 60px;
-            padding: 8px 20px;
-            font-size: 13px;
-        }
-        #fullscreenBtn {
-            min-width: 100px;
-        }
-        .time-display {
-            font-size: 11px;
-            color: #888;
-            min-width: 60px;
-            text-align: center;
-        }
-        .preset-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .preset-btn {
-            padding: 6px 12px;
-            font-size: 11px;
-            color: #00ccff;
-            border-color: #00ccff;
-            flex: 0 1 auto;
-        }
-        .preset-btn:hover {
-            background: #00ccff;
-            color: #000;
-        }
-        .slider-value {
-            font-size: 11px;
-            color: #00ff00;
-            font-weight: 600;
-            min-width: 35px;
-            text-align: center;
-        }
-        .grid-options {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        #videoInput::file-selector-button {
-            background: #282828;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        #videoInput::file-selector-button:hover {
-            background: #333;
-        }
-        #canvas-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #canvas-container:fullscreen {
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 100vh;
-        }
-        #canvas-container:fullscreen canvas {
-            max-width: 100vw;
-            max-height: 100vh;
-        }
-        footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-            text-align: center;
-            font-size: 12px;
-            color: #888;
-        }
-        footer a {
-            color: #00ff00;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        footer a:hover {
-            color: #00ccff;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h2>LED Wall Simulator</h2>
-    
-    <div class="canvas-wrapper">
-        <div id="canvas-container"></div>
-    </div>
+    <h2>Dom's LED Wall Simulator</h2>
 
-    <div class="controls-container">
+    <div class="app">
+        <div class="canvas-area">
+            <div class="canvas-wrapper">
+                <div id="canvas-container"></div>
+            </div>
+
+            <div class="github-header-link">
+                <a href="https://github.com/dominickp/led-wall-simulator" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+            </div>
+        </div>
+
+        <div class="controls-area">
+            <div class="controls-container">
         <!-- Video Loading Section -->
         <div class="control-section">
             <div class="section-title">Video Source</div>
@@ -245,23 +70,15 @@
         <div class="control-section">
             <div class="section-title">Grid Configuration</div>
             <div class="control-row">
-                <div class="control-group">
+                <div class="control-group full">
                     <label>Columns:</label>
-                    <select id="ledColsSelect">
-                        <option value="32">32</option>
-                        <option value="64">64</option>
-                        <option value="128">128</option>
-                        <option value="256" selected>256</option>
-                    </select>
+                    <input type="range" id="ledColsSelect" min="0" max="7" step="1" value="3">
+                    <div class="slider-value" id="ledColsValue">64</div>
                 </div>
-                <div class="control-group">
+                <div class="control-group full">
                     <label>Rows:</label>
-                    <select id="ledRowsSelect">
-                        <option value="32">32</option>
-                        <option value="64">64</option>
-                        <option value="128">128</option>
-                        <option value="256" selected>256</option>
-                    </select>
+                    <input type="range" id="ledRowsSelect" min="0" max="7" step="1" value="3">
+                    <div class="slider-value" id="ledRowsValue">64</div>
                 </div>
             </div>
         </div>
@@ -290,13 +107,9 @@
             <div class="control-row" style="margin-top: 15px;">
                 <button id="fullscreenBtn">Fullscreen</button>
             </div>
+            </div>
         </div>
     </div>
-
-    <footer>
-        <a href="https://github.com/dominickp/led-wall-simulator" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-    </footer>
-
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

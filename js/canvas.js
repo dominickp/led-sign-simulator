@@ -6,12 +6,14 @@ export class CanvasManager {
   static initialize() {
     // Listen for fullscreen changes and resize appropriately
     document.addEventListener("fullscreenchange", () => {
-      const cols = parseFloat(
-        document.querySelector("#ledColsSelect").value || 256,
-      );
-      const rows = parseFloat(
-        document.querySelector("#ledRowsSelect").value || 256,
-      );
+      // Map slider index to actual grid size (matches UI GRID_POWERS)
+      const GRID_POWERS = [8, 16, 32, 64, 96, 128, 192, 256];
+      const colsIdx =
+        parseInt(document.querySelector("#ledColsSelect").value, 10) || 4;
+      const rowsIdx =
+        parseInt(document.querySelector("#ledRowsSelect").value, 10) || 4;
+      const cols = GRID_POWERS[colsIdx] || GRID_POWERS[4];
+      const rows = GRID_POWERS[rowsIdx] || GRID_POWERS[4];
       this.resizeCanvas(cols, rows);
     });
   }
@@ -60,6 +62,25 @@ export class CanvasManager {
     }
 
     resizeCanvas(newW, newH);
+    // Reserve wrapper space to avoid layout jump when canvas changes size
+    const wrapper = document.querySelector(".canvas-wrapper");
+    const container = document.querySelector("#canvas-container");
+    if (wrapper) {
+      // Set a fixed height to the wrapper to prevent page reflow
+      wrapper.style.height = newH + "px";
+      wrapper.style.width = newW + "px";
+      wrapper.style.display = "flex";
+      wrapper.style.justifyContent = "center";
+      wrapper.style.alignItems = "center";
+    }
+    if (container) {
+      // Ensure direct container centers the canvas element
+      container.style.height = "100%";
+      container.style.width = "100%";
+      container.style.display = "flex";
+      container.style.justifyContent = "center";
+      container.style.alignItems = "center";
+    }
   }
 
   static toggleFullscreen() {
