@@ -267,7 +267,10 @@ function getBestRecordingMimeType() {
 
 async function fixWebmDuration(blob, durationMs) {
   try {
-    const globalFixer = window.fixWebmDuration;
+    if (isAndroidDevice()) {
+      return null;
+    }
+    const globalFixer = window.fixWebmDuration || window.ysFixWebmDuration;
     if (typeof globalFixer === "function") {
       return await globalFixer(blob, durationMs);
     }
@@ -277,6 +280,10 @@ async function fixWebmDuration(blob, durationMs) {
     console.warn("WebM duration fix failed:", error);
     return null;
   }
+}
+
+function isAndroidDevice() {
+  return /Android/i.test(navigator.userAgent || "");
 }
 
 function draw() {

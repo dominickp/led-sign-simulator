@@ -40,15 +40,39 @@ export class RenderEngine {
       console.log("Video ready callback triggered");
       this.video.volume(1);
       this.video.loop();
-      this.video.hide();
+      this.keepVideoActive();
       this.isVideoLoaded = true;
       console.log("Video is now loaded and ready to render");
       if (onVideoReady) onVideoReady();
     });
   }
 
+  keepVideoActive() {
+    if (!this.video?.elt) return;
+    const el = this.video.elt;
+    el.setAttribute("playsinline", "");
+    el.setAttribute("muted", "");
+    el.style.position = "absolute";
+    el.style.left = "-9999px";
+    el.style.width = "1px";
+    el.style.height = "1px";
+    el.style.opacity = "0";
+    el.style.pointerEvents = "none";
+  }
+
   render(cols, rows, pitch, bloom) {
     if (!this.isVideoLoaded) {
+      background(0);
+      return;
+    }
+
+    const videoEl = this.video?.elt;
+    if (
+      !videoEl ||
+      videoEl.readyState < 2 ||
+      videoEl.videoWidth === 0 ||
+      videoEl.videoHeight === 0
+    ) {
       background(0);
       return;
     }
