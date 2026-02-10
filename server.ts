@@ -6,6 +6,7 @@
 import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
 
 const PORT = 8000;
+const HOSTNAME = "0.0.0.0";
 
 async function handler(req: Request): Promise<Response> {
   // Parse the URL
@@ -58,8 +59,10 @@ async function handler(req: Request): Promise<Response> {
   }
 }
 
-console.log(`🚀 LED Wall Simulator server running on http://localhost:${PORT}`);
+console.log(
+  `🚀 LED Wall Simulator server running on http://${HOSTNAME}:${PORT}`,
+);
 console.log(`📂 Serving from: ${Deno.cwd()}`);
 console.log(`\nPress Ctrl+C to stop`);
 
-serve(handler, { port: PORT });
+serve(handler, { port: PORT, hostname: HOSTNAME });

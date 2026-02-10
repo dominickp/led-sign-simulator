@@ -24,6 +24,7 @@ export class UIManager {
     this.bloomSlider = select("#bloomSlider");
     this.videoPresetSelect = select("#videoPresetSelect");
     this.presetsContainer = select("#presetsContainer");
+    this.controlsToggleBtn = select("#controlsToggleBtn");
     this.presets = PRESETS;
   }
 
@@ -85,6 +86,34 @@ export class UIManager {
 
   setupFullscreenListener(onFullscreen) {
     this.fullscreenBtn.mousePressed(onFullscreen);
+  }
+
+  setupControlsToggle() {
+    const storageKey = "ledControlsCollapsed";
+    const applyState = (isCollapsed) => {
+      document.body.classList.toggle("controls-collapsed", isCollapsed);
+      if (this.controlsToggleBtn) {
+        this.controlsToggleBtn.elt.textContent = isCollapsed
+          ? "Show controls"
+          : "Hide controls";
+        this.controlsToggleBtn.elt.setAttribute(
+          "aria-expanded",
+          String(!isCollapsed),
+        );
+      }
+    };
+
+    const initialState = localStorage.getItem(storageKey) === "true";
+    applyState(initialState);
+
+    if (this.controlsToggleBtn) {
+      this.controlsToggleBtn.mousePressed(() => {
+        const nextState =
+          !document.body.classList.contains("controls-collapsed");
+        applyState(nextState);
+        localStorage.setItem(storageKey, String(nextState));
+      });
+    }
   }
 
   setupSliderValueDisplays() {

@@ -3,6 +3,11 @@
  */
 
 export class CanvasManager {
+  static currentDims = { cols: 64, rows: 64 };
+  static _resizeQueued = false;
+  static _resizeObserver = null;
+  static _scheduleResize = null;
+
   static initialize() {
     // Listen for fullscreen changes and resize appropriately
     document.addEventListener("fullscreenchange", () => {
@@ -16,10 +21,37 @@ export class CanvasManager {
       const rows = GRID_POWERS[rowsIdx] || GRID_POWERS[4];
       this.resizeCanvas(cols, rows);
     });
+
+    this.setupAutoResize();
+  }
+
+  static setupAutoResize() {
+    this._scheduleResize = () => {
+      if (this._resizeQueued) return;
+      this._resizeQueued = true;
+      requestAnimationFrame(() => {
+        this._resizeQueued = false;
+        this.applyResize();
+      });
+    };
+
+    window.addEventListener("resize", this._scheduleResize);
+
+    const wrapper = document.querySelector(".canvas-wrapper");
+    if (wrapper && "ResizeObserver" in window) {
+      this._resizeObserver = new ResizeObserver(this._scheduleResize);
+      this._resizeObserver.observe(wrapper);
+    }
   }
 
   static resizeCanvas(cols, rows) {
-    const aspect = cols / rows;
+    this.currentDims = { cols, rows };
+    this.applyResize();
+  }
+
+  static applyResize() {
+    const dims = this.currentDims || { cols: 64, rows: 64 };
+    const aspect = dims.cols / dims.rows;
 
     // Check if in fullscreen
     const isFullscreen = document.fullscreenElement !== null;
@@ -41,40 +73,35 @@ export class CanvasManager {
         newH = availHeight;
       }
     } else {
-      // Normal windowed mode
-      // Scale canvas progressively with LED count
-      // 64x64 = 600px, 128x128 = 728px, 256x256 = 984px
-      const maxDim = Math.max(cols, rows);
-      const baseSize = 600 + (maxDim - 64) * 2;
+      const wrapper = document.querySelector(".canvas-wrapper");
+      let availWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
+      let availHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
 
-      newW = baseSize;
-      newH = baseSize;
+      if (!availWidth || !availHeight) {
+        availWidth = window.innerWidth;
+        availHeight = window.innerHeight;
+      }
 
-      if (aspect > 1) {
-        // wider than tall
-        newW = baseSize;
-        newH = Math.round(baseSize / aspect);
+      if (aspect > availWidth / availHeight) {
+        newW = availWidth;
+        newH = Math.round(availWidth / aspect);
       } else {
-        // taller than wide
-        newW = Math.round(baseSize * aspect);
-        newH = baseSize;
+        newW = Math.round(availHeight * aspect);
+        newH = availHeight;
       }
     }
 
-    resizeCanvas(newW, newH);
-    // Reserve wrapper space to avoid layout jump when canvas changes size
+    window.resizeCanvas(newW, newH);
+
     const wrapper = document.querySelector(".canvas-wrapper");
     const container = document.querySelector("#canvas-container");
     if (wrapper) {
-      // Set a fixed height to the wrapper to prevent page reflow
-      wrapper.style.height = newH + "px";
-      wrapper.style.width = newW + "px";
+      wrapper.style.setProperty("--canvas-aspect", String(aspect));
       wrapper.style.display = "flex";
       wrapper.style.justifyContent = "center";
       wrapper.style.alignItems = "center";
     }
     if (container) {
-      // Ensure direct container centers the canvas element
       container.style.height = "100%";
       container.style.width = "100%";
       container.style.display = "flex";

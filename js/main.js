@@ -47,6 +47,7 @@ async function setup() {
   ui.setupGridListeners(handleGridChange);
   ui.setupTimelineListener(handleTimelineChange);
   ui.setupFullscreenListener(handleFullscreen);
+  ui.setupControlsToggle();
 
   // Initialize canvas manager for fullscreen handling
   CanvasManager.initialize();
